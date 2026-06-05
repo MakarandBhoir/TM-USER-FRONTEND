@@ -8,12 +8,14 @@ const appState = {
     users: [],
     isLoading: false,
     isSubmitting: false,
+    editingUserId: null,
 };
 
 // DOM Elements Cache
 const domElements = {
     form: null,
     submitBtn: null,
+    resetBtn: null,
     refreshBtn: null,
     retryBtn: null,
     loadingState: null,
@@ -26,6 +28,7 @@ const domElements = {
     errorMessage: null,
     btnText: null,
     btnLoader: null,
+    formTitle: null,
 };
 
 /**
@@ -50,6 +53,7 @@ function initApp() {
 function cacheElements() {
     domElements.form = document.getElementById('createUserForm');
     domElements.submitBtn = document.getElementById('submitBtn');
+    domElements.resetBtn = document.getElementById('resetBtn');
     domElements.refreshBtn = document.getElementById('refreshBtn');
     domElements.retryBtn = document.getElementById('retryBtn');
     domElements.loadingState = document.getElementById('loadingState');
@@ -62,6 +66,7 @@ function cacheElements() {
     domElements.errorMessage = document.getElementById('errorMessage');
     domElements.btnText = domElements.submitBtn.querySelector('.btn-text');
     domElements.btnLoader = domElements.submitBtn.querySelector('.btn-loader');
+    domElements.formTitle = document.getElementById('formTitle');
 }
 
 /**
@@ -71,6 +76,7 @@ function attachEventListeners() {
     // Form submission
     if (domElements.form) {
         domElements.form.addEventListener('submit', handleFormSubmit);
+        domElements.form.addEventListener('reset', handleFormReset);
     }
 
     // Refresh button
@@ -105,7 +111,11 @@ async function handleFormSubmit(event) {
         return;
     }
 
-    await createNewUser(userData);
+    if (appState.editingUserId) {
+        await updateExistingUser(userData);
+    } else {
+        await createNewUser(userData);
+    }
 }
 
 /**
@@ -162,6 +172,34 @@ async function createNewUser(userData) {
 
         if (error instanceof API.APIError) {
             const message = error.data?.message || error.message || 'Failed to create user';
+            showNotification(message, 'error');
+        } else {
+            showNotification('An unexpected error occurred. Please try again.', 'error');
+        }
+    } finally {
+        setSubmitButtonLoading(false);
+    }
+}
+
+/**
+ * Update an existing user
+ * @param {object} userData - Updated user data
+ */
+async function updateExistingUser(userData) {
+    try {
+        setSubmitButtonLoading(true);
+        await API.updateUser(appState.editingUserId, userData);
+
+        const fullName = `${userData.firstName} ${userData.lastName}`.trim();
+        showNotification(`User "${fullName}" updated successfully!`, 'success');
+
+        exitEditMode(true);
+        await loadUsers();
+    } catch (error) {
+        console.error('Error updating user:', error);
+
+        if (error instanceof API.APIError) {
+            const message = error.data?.message || error.message || 'Failed to update user';
             showNotification(message, 'error');
         } else {
             showNotification('An unexpected error occurred. Please try again.', 'error');
@@ -242,6 +280,17 @@ function createUserRow(user) {
         <td>${escapeHtml(user.phone || 'N/A')}</td>
         <td>${createdAt}</td>
         <td class="actions-cell">
+            <button
+                type="button"
+                class="btn btn-outline btn-small edit-user-btn"
+                data-user-id="${escapeHtml(user.id || '')}"
+                data-first-name="${escapeHtml(user.firstName || '')}"
+                data-last-name="${escapeHtml(user.lastName || '')}"
+                data-email="${escapeHtml(user.email || '')}"
+                data-phone="${escapeHtml(user.phone || '')}"
+            >
+                Edit
+            </button>
             <button 
                 type="button" 
                 class="btn btn-danger btn-small delete-user-btn"
@@ -261,6 +310,24 @@ function createUserRow(user) {
  * @param {MouseEvent} event - Click event
  */
 function handleUserTableClick(event) {
+    const editButton = event.target.closest('.edit-user-btn');
+    if (editButton) {
+        const userId = editButton.dataset.userId;
+        if (!userId) {
+            showNotification('Unable to edit user: missing user ID', 'error');
+            return;
+        }
+
+        enterEditMode({
+            id: userId,
+            firstName: editButton.dataset.firstName || '',
+            lastName: editButton.dataset.lastName || '',
+            email: editButton.dataset.email || '',
+            phone: editButton.dataset.phone || '',
+        });
+        return;
+    }
+
     const deleteButton = event.target.closest('.delete-user-btn');
     if (!deleteButton) {
         return;
@@ -280,6 +347,52 @@ function handleUserTableClick(event) {
     }
 
     deleteUserById(userId, deleteButton, userName);
+}
+
+/**
+ * Handle form reset action
+ */
+function handleFormReset() {
+    if (appState.editingUserId) {
+        exitEditMode(false);
+    }
+}
+
+/**
+ * Enter edit mode and pre-populate form values
+ * @param {object} user - User data
+ */
+function enterEditMode(user) {
+    appState.editingUserId = user.id;
+    domElements.form.firstName.value = user.firstName;
+    domElements.form.lastName.value = user.lastName;
+    domElements.form.email.value = user.email;
+    domElements.form.phone.value = user.phone;
+    domElements.btnText.textContent = 'Update User';
+    if (domElements.resetBtn) {
+        domElements.resetBtn.textContent = 'Cancel Edit';
+    }
+    if (domElements.formTitle) {
+        domElements.formTitle.textContent = 'Edit User';
+    }
+}
+
+/**
+ * Exit edit mode and reset form labels
+ * @param {boolean} shouldResetForm - Whether to clear form fields
+ */
+function exitEditMode(shouldResetForm) {
+    appState.editingUserId = null;
+    domElements.btnText.textContent = 'Create User';
+    if (domElements.resetBtn) {
+        domElements.resetBtn.textContent = 'Clear Form';
+    }
+    if (domElements.formTitle) {
+        domElements.formTitle.textContent = 'Add New User';
+    }
+    if (shouldResetForm) {
+        domElements.form.reset();
+    }
 }
 
 /**

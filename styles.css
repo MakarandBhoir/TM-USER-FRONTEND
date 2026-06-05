@@ -403,6 +403,8 @@ a:hover {
 
 .actions-cell {
     white-space: nowrap;
+    display: flex;
+    gap: var(--spacing-sm);
 }
 
 /* ================================================

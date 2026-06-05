@@ -7,9 +7,10 @@ A professional, responsive frontend web application for managing users. Built wi
 - ✨ Modern, clean SaaS-inspired design
 - 📱 Fully responsive (desktop, tablet, mobile)
 - 🚀 Fast and lightweight (pure vanilla JavaScript)
-- 🎯 Two main functionalities:
+- 🎯 Core functionalities:
   - **Get All Users** - Fetch and display users list
   - **Create User** - Add new users via form
+  - **Edit User** - Update existing users with pre-filled form values
   - **Delete User** - Remove users from the list
 - 🎨 Beautiful UI with Flexbox/Grid layouts
 - ⚡ Real-time form validation
@@ -48,6 +49,7 @@ user-management-frontend/
 - REST API service layer
 - `getAllUsers()` - Fetch all users
 - `createUser(userData)` - Create a new user
+- `updateUser(userId, userData)` - Update an existing user
 - Error handling with custom `APIError` class
 - Request timeout handling
 - Email validation
@@ -151,6 +153,22 @@ Content-Type: application/json
 }
 ```
 
+#### Update User
+```
+PUT /api/users/{id}
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "firstName": "Jane",
+  "lastName": "Doe",
+  "email": "jane.doe@example.com",
+  "phone": "+1-234-567-1111"
+}
+```
+
 **Response:**
 ```json
 {
@@ -194,6 +212,13 @@ app.use(cors({
 2. Click "Refresh" to reload the list
 3. Table displays: ID, First Name, Last Name, Email, Phone, Created Date
 4. Total user count shown in sidebar
+
+### Editing a User
+
+1. Click **Edit** on any user row
+2. The form switches to edit mode and pre-fills user data
+3. Update the fields and click **Update User**
+4. See success notification and refreshed user list
 
 ### Error Handling
 

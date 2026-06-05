@@ -140,6 +140,53 @@ async function createUser(userData) {
 }
 
 /**
+ * Update an existing user
+ * @param {string|number} userId - User ID
+ * @param {object} userData - User data object
+ * @param {string} userData.firstName - User's first name
+ * @param {string} userData.lastName - User's last name
+ * @param {string} userData.email - User's email address
+ * @param {string} [userData.phone] - User's phone number (optional)
+ * @returns {Promise<object>} - The updated user object
+ * @throws {APIError} - If the request fails
+ */
+async function updateUser(userId, userData) {
+    if (userId === null || userId === undefined || userId === '') {
+        throw new APIError('User ID is required', 'VALIDATION_ERROR');
+    }
+
+    try {
+        // Validate required fields
+        if (!userData.firstName || !userData.lastName || !userData.email) {
+            throw new APIError('firstName, lastName, and email are required fields', 'VALIDATION_ERROR');
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(userData.email)) {
+            throw new APIError('Invalid email format', 'VALIDATION_ERROR');
+        }
+
+        return await fetchWithTimeout(`${API_CONFIG.BASE_URL}/users/${encodeURIComponent(userId)}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                firstName: userData.firstName.trim(),
+                lastName: userData.lastName.trim(),
+                email: userData.email.trim(),
+                phone: userData.phone ? userData.phone.trim() : null,
+            }),
+        });
+    } catch (error) {
+        console.error('Error updating user:', error);
+        throw error;
+    }
+}
+
+/**
  * Delete a user by ID
  * @param {string|number} userId - User ID
  * @returns {Promise<void>}
@@ -189,6 +236,7 @@ function formatDate(dateString) {
 const API = {
     getAllUsers,
     createUser,
+    updateUser,
     deleteUser,
     formatDate,
     APIError,
