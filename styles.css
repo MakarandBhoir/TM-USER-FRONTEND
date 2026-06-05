@@ -320,6 +320,20 @@ a:hover {
     border-color: var(--color-primary);
 }
 
+.btn-danger {
+    background-color: var(--color-error);
+    color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+    background-color: #dc2626;
+}
+
+.btn-small {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 0.85rem;
+}
+
 .btn-text {
     display: inline;
 }
@@ -385,6 +399,10 @@ a:hover {
 
 .users-table tbody tr:last-child td {
     border-bottom: none;
+}
+
+.actions-cell {
+    white-space: nowrap;
 }
 
 /* ================================================

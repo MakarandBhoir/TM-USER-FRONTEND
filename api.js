@@ -36,7 +36,17 @@ async function fetchWithTimeout(url, options = {}) {
             );
         }
 
-        return await response.json();
+        if (response.status === 204) {
+            return null;
+        }
+
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            return null;
+        }
+
+        const responseText = await response.text();
+        return responseText ? JSON.parse(responseText) : null;
     } catch (error) {
         if (error instanceof APIError) {
             throw error;
@@ -130,6 +140,30 @@ async function createUser(userData) {
 }
 
 /**
+ * Delete a user by ID
+ * @param {string|number} userId - User ID
+ * @returns {Promise<void>}
+ * @throws {APIError} - If the request fails
+ */
+async function deleteUser(userId) {
+    if (userId === null || userId === undefined || userId === '') {
+        throw new APIError('User ID is required', 'VALIDATION_ERROR');
+    }
+
+    try {
+        await fetchWithTimeout(`${API_CONFIG.BASE_URL}/users/${encodeURIComponent(userId)}`, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json',
+            },
+        });
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        throw error;
+    }
+}
+
+/**
  * Format a date string to a readable format
  * @param {string} dateString - ISO date string
  * @returns {string} - Formatted date
@@ -155,6 +189,7 @@ function formatDate(dateString) {
 const API = {
     getAllUsers,
     createUser,
+    deleteUser,
     formatDate,
     APIError,
     config: API_CONFIG,
