@@ -10,6 +10,7 @@ A professional, responsive frontend web application for managing users. Built wi
 - 🎯 Two main functionalities:
   - **Get All Users** - Fetch and display users list
   - **Create User** - Add new users via form
+  - **Delete User** - Remove users from the list
 - 🎨 Beautiful UI with Flexbox/Grid layouts
 - ⚡ Real-time form validation
 - 🔔 Toast notifications for user feedback
@@ -289,7 +290,7 @@ All styling uses CSS variables and can be easily customized:
 
 ## Future Enhancements
 
-- Edit and delete user functionality
+- Edit user functionality
 - User search and filtering
 - Pagination for large user lists
 - Sort by columns

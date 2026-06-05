@@ -82,6 +82,11 @@ function attachEventListeners() {
     if (domElements.retryBtn) {
         domElements.retryBtn.addEventListener('click', loadUsers);
     }
+
+    // Delete user buttons (event delegation)
+    if (domElements.usersTableBody) {
+        domElements.usersTableBody.addEventListener('click', handleUserTableClick);
+    }
 }
 
 /**
@@ -236,9 +241,76 @@ function createUserRow(user) {
         <td>${escapeHtml(user.email || 'N/A')}</td>
         <td>${escapeHtml(user.phone || 'N/A')}</td>
         <td>${createdAt}</td>
+        <td class="actions-cell">
+            <button 
+                type="button" 
+                class="btn btn-danger btn-small delete-user-btn"
+                data-user-id="${escapeHtml(user.id || '')}"
+                data-user-name="${escapeHtml(`${user.firstName || ''} ${user.lastName || ''}`.trim() || 'this user')}"
+            >
+                Delete
+            </button>
+        </td>
     `;
 
     return row;
+}
+
+/**
+ * Handle user table click actions
+ * @param {MouseEvent} event - Click event
+ */
+function handleUserTableClick(event) {
+    const deleteButton = event.target.closest('.delete-user-btn');
+    if (!deleteButton) {
+        return;
+    }
+
+    const userId = deleteButton.dataset.userId;
+    const userName = deleteButton.dataset.userName || 'this user';
+
+    if (!userId) {
+        showNotification('Unable to delete user: missing user ID', 'error');
+        return;
+    }
+
+    const isConfirmed = window.confirm(`Are you sure you want to delete ${userName}?`);
+    if (!isConfirmed) {
+        return;
+    }
+
+    deleteUserById(userId, deleteButton, userName);
+}
+
+/**
+ * Delete user by ID
+ * @param {string} userId - User ID
+ * @param {HTMLButtonElement} button - Delete button element
+ * @param {string} userName - User full name
+ */
+async function deleteUserById(userId, button, userName) {
+    const originalText = button.textContent;
+
+    try {
+        button.disabled = true;
+        button.textContent = 'Deleting...';
+
+        await API.deleteUser(userId);
+        showNotification(`User "${userName}" deleted successfully!`, 'success');
+        await loadUsers();
+    } catch (error) {
+        console.error('Error deleting user:', error);
+
+        if (error instanceof API.APIError) {
+            const message = error.data?.message || error.message || 'Failed to delete user';
+            showNotification(message, 'error');
+        } else {
+            showNotification('An unexpected error occurred while deleting the user.', 'error');
+        }
+    } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+    }
 }
 
 /**
