@@ -16,6 +16,7 @@ A professional, responsive frontend web application for managing users. Built wi
 - ⚡ Real-time form validation
 - 🔔 Toast notifications for user feedback
 - 📊 User statistics sidebar
+- 🔐 A standalone sample sign-in page
 - ♿ Semantic HTML structure
 
 ## Project Structure
@@ -23,6 +24,7 @@ A professional, responsive frontend web application for managing users. Built wi
 ```
 user-management-frontend/
 ├── index.html       # Main HTML structure
+├── login.html       # Sample sign-in page (UI only)
 ├── styles.css       # All styling (Flexbox/Grid, responsive)
 ├── app.js          # Application logic & DOM manipulation
 ├── api.js          # REST API communication layer
@@ -64,6 +66,10 @@ user-management-frontend/
 - Loading/error/empty state management
 - Toast notification system
 - Input validation and XSS prevention
+
+### login.html
+- Standalone, responsive sign-in form example
+- UI-only sample; no authentication service is connected
 
 ## Setup Instructions
 
